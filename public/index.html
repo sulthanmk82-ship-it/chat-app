@@ -1,1 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Neon Chat — Sign In</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body class="login-body">
 
+  <!-- Animated background grid -->
+  <div class="bg-grid"></div>
+  <div class="bg-glow"></div>
+
+  <div class="login-wrapper">
+    <div class="login-card">
+
+      <!-- Logo -->
+      <div class="login-logo">
+        <div class="logo-icon">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+            <path d="M4 6C4 4.895 4.895 4 6 4H26C27.105 4 28 4.895 28 6V20C28 21.105 27.105 22 26 22H18L12 28V22H6C4.895 22 4 21.105 4 20V6Z" fill="url(#grad1)"/>
+            <circle cx="11" cy="13" r="2" fill="white" opacity="0.9"/>
+            <circle cx="16" cy="13" r="2" fill="white" opacity="0.9"/>
+            <circle cx="21" cy="13" r="2" fill="white" opacity="0.9"/>
+            <defs>
+              <linearGradient id="grad1" x1="4" y1="4" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#4FACFE"/>
+                <stop offset="1" stop-color="#7B61FF"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <span class="logo-text">Neon<span class="logo-accent">Chat</span></span>
+      </div>
+
+      <h1 class="login-title">Welcome back.</h1>
+      <p class="login-subtitle">Enter your username to start chatting.</p>
+
+      <!-- Error message (hidden by default) -->
+      <div class="error-banner" id="errorBanner">
+        <span class="error-icon">⚠</span>
+        <span id="errorText">Username already taken.</span>
+      </div>
+
+      <!-- Login form -->
+      <div class="login-form">
+        <div class="input-group">
+          <label class="input-label">Username</label>
+          <div class="input-wrapper">
+            <span class="input-icon">@</span>
+            <input
+              type="text"
+              id="usernameInput"
+              class="text-input"
+              placeholder="e.g. alice, bob123..."
+              maxlength="20"
+              autocomplete="off"
+              spellcheck="false"
+            />
+          </div>
+        </div>
+
+        <button class="btn-login" id="loginBtn" onclick="handleLogin()">
+          <span class="btn-text">Enter Chat</span>
+          <span class="btn-arrow">→</span>
+        </button>
+      </div>
+
+      <p class="login-footer">No account needed. Just pick a unique name.</p>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    // ─── Socket Connection ────────────────────────────────────────────────────
+    const socket = io();
+
+    // ─── DOM Elements ─────────────────────────────────────────────────────────
+    const usernameInput = document.getElementById("usernameInput");
+    const loginBtn = document.getElementById("loginBtn");
+    const errorBanner = document.getElementById("errorBanner");
+    const errorText = document.getElementById("errorText");
+
+    // Allow Enter key to submit
+    usernameInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") handleLogin();
+    });
+
+    // Hide error when user starts typing
+    usernameInput.addEventListener("input", () => {
+      errorBanner.classList.remove("show");
+    });
+
+    // Focus input on load
+    window.addEventListener("load", () => {
+      usernameInput.focus();
+    });
+
+    // ─── Login Handler ────────────────────────────────────────────────────────
+    function handleLogin() {
+      const username = usernameInput.value.trim();
+
+      // Basic validation
+      if (!username) {
+        showError("Please enter a username.");
+        shake(usernameInput);
+        return;
+      }
+      if (username.length < 2) {
+        showError("Username must be at least 2 characters.");
+        shake(usernameInput);
+        return;
+      }
+      if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+        showError("Only letters, numbers, and underscores allowed.");
+        shake(usernameInput);
+        return;
+      }
+
+      // Disable button while waiting
+      loginBtn.disabled = true;
+      loginBtn.querySelector(".btn-text").textContent = "Connecting...";
+
+      // Emit login event to server
+      socket.emit("user:login", username);
+    }
+
+    // ─── Socket Events ────────────────────────────────────────────────────────
+
+    // Login successful → store data and redirect to chat
+    socket.on("login:success", ({ username, users }) => {
+      sessionStorage.setItem("username", username);
+      sessionStorage.setItem("users", JSON.stringify(users));
+      window.location.href = "/chat";
+    });
+
+    // Login failed → show error
+    socket.on("login:error", (message) => {
+      showError(message);
+      shake(usernameInput);
+      loginBtn.disabled = false;
+      loginBtn.querySelector(".btn-text").textContent = "Enter Chat";
+    });
+
+    // ─── UI Helpers ───────────────────────────────────────────────────────────
+    function showError(msg) {
+      errorText.textContent = msg;
+      errorBanner.classList.add("show");
+    }
+
+    function shake(el) {
+      el.classList.add("shake");
+      el.addEventListener("animationend", () => el.classList.remove("shake"), { once: true });
+    }
+  </script>
+</body>
+</html>
