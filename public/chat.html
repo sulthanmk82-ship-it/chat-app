@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ChatWave</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="chat-body">
+
+  <!-- ── SIDEBAR ───────────────────────────────────────────────── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="logo-icon sm">
+          <svg width="18" height="18" viewBox="0 0 28 28" fill="none">
+            <path d="M14 2C7.373 2 2 7.373 2 14c0 2.09.51 4.06 1.41 5.8L2 26l6.2-1.41C9.94 25.49 11.91 26 14 26c6.627 0 12-5.373 12-12S20.627 2 14 2z" fill="url(#lg2)"/>
+            <defs><linearGradient id="lg2" x1="2" y1="2" x2="26" y2="26"><stop offset="0%" stop-color="#4f8ef7"/><stop offset="100%" stop-color="#7c3aed"/></linearGradient></defs>
+          </svg>
+        </div>
+        <span class="logo-text">ChatWave</span>
+      </div>
+      <div class="sidebar-me">
+        <div class="avatar" id="my-avatar"></div>
+        <div class="me-info">
+          <span class="me-name" id="my-username">—</span>
+          <span class="me-status online-dot">Online</span>
+        </div>
+        <button class="logout-btn" onclick="logout()" title="Logout">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path d="M7 3H4a1 1 0 00-1 1v10a1 1 0 001 1h3" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M12 12l3-3-3-3M15 9H7" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="search-wrap">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <circle cx="7" cy="7" r="5" stroke="#64748b" stroke-width="1.5"/>
+        <path d="M11 11l3 3" stroke="#64748b" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <input type="text" class="search-input" id="user-search" placeholder="Search users…" oninput="filterUsers()" />
+    </div>
+
+    <div class="sidebar-section-label">All Users</div>
+    <div class="user-list" id="user-list">
+      <div class="empty-list">No users yet…</div>
+    </div>
+
+    <!-- Mobile close -->
+    <button class="sidebar-close" id="sidebar-close" onclick="closeSidebar()">✕</button>
+  </aside>
+
+  <!-- ── MAIN CHAT AREA ─────────────────────────────────────────── -->
+  <main class="chat-main">
+    <!-- Empty state -->
+    <div class="empty-chat" id="empty-chat">
+      <div class="empty-chat-icon">
+        <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+          <path d="M28 4C14.745 4 4 14.745 4 28c0 4.18 1.02 8.12 2.82 11.6L4 52l12.4-2.82C19.88 51 23.82 52 28 52c13.255 0 24-10.745 24-24S41.255 4 28 4z" fill="url(#ec)" opacity=".15"/>
+          <path d="M28 4C14.745 4 4 14.745 4 28c0 4.18 1.02 8.12 2.82 11.6L4 52l12.4-2.82C19.88 51 23.82 52 28 52c13.255 0 24-10.745 24-24S41.255 4 28 4z" stroke="url(#ec)" stroke-width="2"/>
+          <defs><linearGradient id="ec" x1="4" y1="4" x2="52" y2="52"><stop offset="0%" stop-color="#4f8ef7"/><stop offset="100%" stop-color="#7c3aed"/></linearGradient></defs>
+        </svg>
+      </div>
+      <h2>Select a conversation</h2>
+      <p>Choose a user from the sidebar to start chatting</p>
+    </div>
+
+    <!-- Chat view -->
+    <div class="chat-view" id="chat-view" style="display:none;">
+      <!-- Header -->
+      <div class="chat-header">
+        <button class="menu-btn" onclick="openSidebar()">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M3 5h14M3 10h14M3 15h14" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <div class="chat-peer-avatar" id="peer-avatar"></div>
+        <div class="chat-peer-info">
+          <span class="chat-peer-name" id="peer-name">—</span>
+          <span class="chat-peer-status" id="peer-status">offline</span>
+        </div>
+      </div>
+
+      <!-- Messages -->
+      <div class="messages-wrap" id="messages-wrap">
+        <div class="messages" id="messages"></div>
+      </div>
+
+      <!-- Typing indicator -->
+      <div class="typing-indicator" id="typing-indicator" style="display:none;">
+        <span id="typing-name">User</span> is typing
+        <div class="typing-dots"><span></span><span></span><span></span></div>
+      </div>
+
+      <!-- Input bar -->
+      <div class="input-bar">
+        <div class="input-wrap">
+          <input
+            type="text"
+            id="msg-input"
+            class="msg-input"
+            placeholder="Type a message…"
+            autocomplete="off"
+            oninput="onTyping()"
+          />
+        </div>
+        <!-- Voice button -->
+        <button class="voice-btn" id="voice-btn" onclick="toggleRecording()" title="Hold to record voice">
+          <svg id="mic-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <rect x="7" y="2" width="6" height="10" rx="3" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M4 10a6 6 0 0012 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M10 16v2M8 18h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <!-- Send button -->
+        <button class="send-btn" onclick="sendMessage()" title="Send">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M2 10L18 3l-5 7 5 7L2 10z" fill="white"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Recording overlay -->
+      <div class="recording-bar" id="recording-bar" style="display:none;">
+        <div class="rec-pulse"></div>
+        <span>Recording… tap mic again to send</span>
+        <button class="rec-cancel" onclick="cancelRecording()">Cancel</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Sidebar overlay for mobile -->
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
